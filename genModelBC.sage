@@ -283,17 +283,13 @@ def testLinIn(ANFS):
 			mapSetTrans[x].add(tuple(Dx))
 			Ls = [sum(xx) for xx in Dx]
 			Ls.sort()
+
 			if Ls == [2,2,3]:
 				set223.add(tuple(Dx))
 			if Ls == [2,3,3]:
 				set233.add(tuple(Dx))
 			if Ls == [2,3]:
 				set23.add(tuple(Dx))
-				# print "                     "
-				# print M
-				# printDivTable(D)
-				# print ""
-				# break
 
 			for s in Ls:
 				if s == 2 or s == 3:
@@ -301,13 +297,6 @@ def testLinIn(ANFS):
 
 			nb2 += Ls.count(2)
 			nb3 += Ls.count(3)
-
-		# if nb2 == 17:
-			# sys.stdout.write("                   \r")
-			# print "17 w2"
-			# print M
-			# printDivTable(D)
-			# print "------------------------------------"
 
 		if fullone:
 
@@ -327,13 +316,6 @@ def testLinIn(ANFS):
 				setDivTableFull1.add(L)
 				listDivTableFull1.append(D)
 				listLinFull1.append(M)
-
-				# sys.stdout.write("                   \r")
-				# print M
-				# printDivTable(D)
-				# print "------------------------------------"
-
-
 
 		if nb2 in mapNb2:
 			mapNb2[nb2] += 1

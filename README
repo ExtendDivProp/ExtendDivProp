@@ -6,6 +6,6 @@ Note that not everything is online yet, as the code needs a bit of cleaning befo
 However a part of it should work fine already, especially some function in RECTANGLE.sage :
  - newRECTANGLEDistinguisher10r() : Allow to check the new distinguisher over 10 rounds of RECTANGLE
  - oldRECTANGLEDistinguisher9r() : Allow to check the old best known distinguisher over 9 rounds of RECTANGLE
- - twkRECTANGLEDistinguisher8r() : Allow to check the distinguisher over 8 roudns of the variant of RECTANGLE
+ - twkRECTANGLEDistinguisher8r() : Allow to check the distinguisher over 8 rounds of the variant of RECTANGLE
 
-More documentation, and the complete code, will be uploaded over time.
+This will be updated over time.

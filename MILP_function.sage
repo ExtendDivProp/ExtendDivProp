@@ -135,10 +135,13 @@ def addSboxConstr(m, L, inputvar, outputvar):
 	return c
 
 def cleanOptimize(m_input):
+	"""
+	Optimize the input model while managing integer inconsistencies.
+	This return a solved model on which one can then extract the solution
+	"""
 	m = m_input.copy()
 	runtime = 0
 	while True:
-		m.write("testmodelclean.mps")
 		m.optimize()
 		runtime += m.Runtime
 
@@ -150,8 +153,9 @@ def cleanOptimize(m_input):
 			Lfix = []
 			for v in m.getVars():
 				val = v.getAttr('x')
-				ival = int(val)
+				ival = int(round(val))
 				if val != ival:
+					# print "Fixed : " + v.VarName + " " + str(ival) + " " + ("%.32f" %val) + 20*" "
 					Lfix.append((v,ival))
 			for (v,ival) in Lfix:
 				m.addConstr(v == ival)
@@ -242,10 +246,11 @@ def computeFullDivisionProperty(m_input):
 	prevMinWeight = 1
 	helperConstr = m.addConstr(quicksum(v for v in objvars) >= 1)
 
-	while m.Status != 3:
-		m.optimize()
-		totalruntime += m.Runtime
-		if m.Status == 2:
+	while True:
+		# m.optimize()
+		(m2,r) = cleanOptimize(m)
+		totalruntime += r
+		if m2.Status == 2:
 			#If the model has feasible solution
 			#Get the solution and cut it
 			
@@ -254,8 +259,9 @@ def computeFullDivisionProperty(m_input):
 			k = [0 for _ in range(n)]
 			s = LinExpr()
 			nbbit = 0
+			obj2 = m2.getObjective()
 			for j in range(n):
-				val = objvars[j].X
+				val = obj2.getVar(j).X
 				ival = int(val)
 				if val != ival:
 					print "\n!!! Integer inconsistency detected !!!"
@@ -270,20 +276,24 @@ def computeFullDivisionProperty(m_input):
 			#So we cut any redudant solution by saying that at least one of those bits must be zero
 			m.addConstr(s <= nbbit-1)
 
+
 			#This is to help the solver prove that a solution is optimal
 			#Once we found a solution of weight n, we know that there are no other solutions of weight < n
-			oval = m.ObjVal
-			if(m.ObjVal > prevMinWeight):
+			oval = m2.ObjVal
+			if(m2.ObjVal > prevMinWeight):
 				prevMinWeight = oval
 				helperConstr.RHS = oval
 				m.update()
 			K.append(k)
+			m.update()
 			sys.stdout.write(str(len(K)) + " elements in K, max weight " + str(oval) + " (" + ("%.2f" % totalruntime) + "s)\r")
 			sys.stdout.flush()
 
-		elif m.Status != 3:
+		elif m2.Status != 3:
 			print "Error on model Status (" + str(m.Status) +")"
 			return (K,totalruntime)
+		else:
+			break
 	print ""
 	return (K, totalruntime)
 
