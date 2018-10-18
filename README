@@ -4,8 +4,13 @@ This was tested with Sagemath 6.8 and Gurobi 8.0.1
 Note that not everything is online yet, as the code needs a bit of cleaning before being public.
 
 However a part of it should work fine already, especially some function in RECTANGLE.sage :
- - newRECTANGLEDistinguisher10r() : Allow to check the new distinguisher over 10 rounds of RECTANGLE
- - oldRECTANGLEDistinguisher9r() : Allow to check the old best known distinguisher over 9 rounds of RECTANGLE
- - twkRECTANGLEDistinguisher8r() : Allow to check the distinguisher over 8 rounds of the variant of RECTANGLE
+ - newRECTANGLEDistinguisher10r : Allow to check the new distinguisher over 10 rounds of RECTANGLE
+ - oldRECTANGLEDistinguisher9r : Allow to check the old best known distinguisher over 9 rounds of RECTANGLE
+ - twkRECTANGLEDistinguisher8r : Allow to check the distinguisher over 8 rounds of the variant of RECTANGLE
+ - extend_RECTANGLE : Apply the extension technique to compute all sets K^j_{k_i^0} for RECTANGLE
+
+ - oldPRESENTDistinguisher9r : Allow to check the old best known distinguisher over 9 rounds of PRESENT
+ - twkPRESENTDistinguisher7r : Allow to check the distinguisher over 7 rounds of the variant of PRESENT
+ - extend_PRESENT : Apply the extension technique to compute all sets K^j_{k_i^0} for PRESENT
 
 This will be updated over time.

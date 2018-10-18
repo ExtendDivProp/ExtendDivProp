@@ -235,3 +235,79 @@ def RECTANGLE9r_check_Midori64Sbox():
 		print "There is no distinguisher"
 	else:
 		print "There is a distinguisher !"
+
+
+def extend_RECTANGLE(S, nbround, solve=True):
+	"""
+	Search for an extended division property for RECTANGLE using S-box S over nbround rounds
+	nbround should be rMax-2 i.e. if one want to find a distinguisher over 8 rounds, nbround should be 6 (cf. paper)
+	The solve parameter allow to enable (or not) the search algorithm
+	If it is set to false, then this function will only generate the MILP models but will not try to compute the division property sets
+	This is useful if the computation time is too high, so that one can do the search in parallel
+	As a hint, doing the full search (ie. solve=True) with nbround = 6 and using the tweaked RECTANGLE S-box is easily doable on a standard laptop
+	Using nbround = 8 and the original S-box however takes quite some time
+	If solve=True, then each divset is saved in a .sobj file, saved in
+	./RECTANGLE/divSet_RECTANGLE_$(nbround)r_Sbox$(i)_$(v)
+	where i is the index of the modified Sbox on the first round, and v in the ouput vector of this Sbox (\tilde{k}_i^0 in the paper)
+
+	Note that there might be some integer inconsistency due to how MILP solvers works.
+	For now, this must managed by hand to compute the full set.
+	Usually, chekcing the non-integer variables, rounding and checking if the rounded solution is valid.
+	If so, then the solution can be added to the divset, 
+	and using an updated model which cuts all previous solution, one can call again computeFullDivisionProperty.
+	This will be improved in the future for a better use.
+	"""
+
+	#Original S-box : S = [0x6,0x5,0xc,0xa,0x1,0xe,0x7,0x9,0xb,0x0,0x3,0xd,0x8,0xf,0x4,0x2]
+	#S-box of the tweaked version : S = [5, 9, 0, 7, 15, 13, 14, 8, 1, 10, 12, 3, 4, 6, 2, 11]
+	(P,ANFS) = SBOX_ANF(S)
+	hexSbox = "".join(hex(ss) for ss in S)
+	print hexSbox
+	# nbround = 6
+
+	#Go through the vectors in weight order 2 - 3 - 1
+	weight2vectors = [(1,1,0,0),(1,0,1,0),(0,1,1,0),(1,0,0,1),(0,1,0,1),(0,0,1,1)]
+	weight3vectors = [(0,1,1,1),(1,0,1,1),(1,1,0,1),(1,1,1,0)]
+	weight1vectors = [(1,0,0,0),(0,1,0,0),(0,0,1,0),(0,0,0,1)]
+	V = weight2vectors + weight3vectors + weight1vectors
+
+	#Create a file to keep track of the integer inconsistency (if any)
+	#For now, these must be managed by hand to get a complete division property set
+	#Something should come up quickly to directly manage them
+	if solve:
+		f = open("int_inconsistency_RECTANGLE_"+hexSbox+"_"+str(nbround)+".txt","w")
+	for i in range(16):
+		for v in V:
+			print "Sbox " + str(i) + " " + str(v)
+			(m,x) = RECTANGLE_model(nbround,ANFS,ANFS,ANFS)
+
+			#Reorder the variables
+			x0 = x[0]
+			x0[1] = x0[1][1:] + x0[1][:1]
+			x0[2] = x0[2][12:] + x0[2][:12]
+			x0[3] = x0[3][13:] + x0[3][:13]
+
+			#Then add the constraint on the output of the Sboxes
+			for j in range(4):
+				m.addConstr(x0[j][i] == v[j])
+
+			for ii in range(i):
+				for j in range(4):
+					m.addConstr(x0[j][ii] == 1)
+
+			for ii in range(i+1,16):
+				for j in range(4):
+					m.addConstr(x0[j][ii] == 1)
+
+			#Search only the vectors which activate only one Sbox
+			a = [m.addVar(vtype=GRB.BINARY, name="a"+str(j)) for j in range(16)]
+			for j in range(16):
+				m.addGenConstrMax(a[j], [x[nbround][jj][j] for jj in range(4)])
+			m.addConstr(quicksum(a) == 1)
+
+			m.update()
+			m.write("./models/RECTANGLE/RECTANGLE_"+hexSbox+"_"+str(nbround)+"r_Sbox" + str(i) + "_" + ("".join(str(vv) for vv in v)) + ".mps")
+			if solve:
+				(K,r) = computeFullDivisionProperty(m)
+				print ""
+				save(K,"./RECTANGLE/divSet_RECTANGLE_"+hexSbox+"_"+str(nbround)+"r_Sbox"+str(i)+"_"+"".join(str(c) for c in v))

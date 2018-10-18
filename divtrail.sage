@@ -9,6 +9,7 @@ def SBOX_ANF(SBOX):
 	return (P, y) where
 	y is a list of n ANF for each output coordinate
 	P is a common BooleanPolynomialRing for all element of y
+	!!Has a memory leak, use custom_ANF if this is a problem
 	"""
 
 	#size of the sbox
@@ -24,12 +25,52 @@ def SBOX_ANF(SBOX):
 	#Set a common BooleanPolynomialRing for each output function
 	y0 = B[0].algebraic_normal_form()
 	P = y0.ring()
-	x = P.gens()
 
 	#Compute the ANF of each output bit
 	y = [P(b.algebraic_normal_form()) for b in B]
 
 	return (P, y)
+
+def vectorF2n(n):
+	"""
+	Create the list of all vector in {0,1}^n
+	"""
+	return [tuple(Integer(c).bits() + [0 for i in range(n-Integer(c).nbits())]) for c in range(2^n)]
+
+def vecToInt(x):
+	vx = 0
+	for i in range(len(x)):
+		if x[i] == 1:
+			vx += (1 << i)
+
+	return vx
+
+def custom_ANF(B,SBOX):
+	"""Compute the ANF of S in the ring B"""
+
+	#size of the sbox
+	n = max([x.nbits() for x in SBOX])
+	#Get the bit representation of each value
+	SBOX_bits = [x.bits() + [0 for i in range(n-len(x.bits()))] for x in SBOX]
+	xvar = B.gens()
+
+	ANF = [B(0) for _ in range(n)]
+	F2n = vectorF2n(n)
+
+	for i in range(n):
+		#For each component of the ANF
+		for u in F2n:
+			#compute a_u for ANF[i]
+			a_u = 0
+			for x in F2n:
+				if greater(u,x):
+					vx = vecToInt(x)
+					a_u ^^= SBOX_bits[vx][i]
+			if a_u == 1:
+				xu = prod(xvar[i] for i in range(n) if u[i] == 1)
+				ANF[i] += xu
+
+	return ANF
 
 def greater(a,b):
 	#return True if a[i] >= b[i] for all i
