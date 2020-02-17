@@ -1,4 +1,4 @@
-This is the git repository containing the implementation used for the paper "Extending the Division Property with Linear Mappings".
+This is the git repository containing the implementation used for the paper " Linearly equivalent S-boxes and the Division Property".
 
 This was tested with Sagemath 6.8 and Gurobi 8.0.1
 Note that not everything is online yet, as the code needs a bit of cleaning before being public.
